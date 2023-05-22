@@ -7,7 +7,7 @@ import {
 } from '~/server/api/trpc';
 
 export const tweetRouter = createTRPCRouter({
-  infiniteFeed : publicProcedure.input(
+  infiniteFeed: publicProcedure.input(
     z.object({
       limit: z.number().optional(), 
       cursor: z.object({ id: z.string(), createdAt: z.date() }).optional(),

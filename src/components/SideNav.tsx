@@ -78,7 +78,7 @@ export default function SideNav() {
         </li>
         
         {user != null &&
-          <div className="flex items-center self-stretch mt-52">
+          <div className="flex items-center mt-8">
             <ProfileImage src={user.image}/>
             <h1 className="hidden ml-2 md:inline">{user.name}</h1>
           </div>

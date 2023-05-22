@@ -1,60 +1,36 @@
-import { type NextPage } from "next";
-import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
-
-import Image from "next/image";
+import { type NextPage } from 'next';
+import InfiniteTweetList from '~/components/InfiniteTweetList';
+import NewTweetForm from '~/components/NewTweetForm';
+import { api } from '~/utils/api';
 
 const Home: NextPage = () => {
   return (
     <>
-      <Head>
-        <title>My Twitter Clone</title>
-        <meta
-          name="twitter clone made by Hasan Tanich"
-          content="Twitter clone for learning purposes"
-        />
-        <link rel="icon" href="/logo.ico" />
-      </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <h1 className="text-2xl font-bold text-white">Hello there</h1>
-          <div className="flex flex-col items-center gap-2">
-            <AuthShowcase />
-          </div>
-        </div>
-      </main>
+      <header className="sticky top-0 z-10 p-2 bg-white border-b">
+        <h1 className="px-4 mb-2 text-lg font-bold">Home</h1>
+      </header>
+
+      <NewTweetForm />
+      <RecentTweets />
     </>
   );
 };
 
-export default Home;
-
-const AuthShowcase: React.FC = () => {
-  const { data: sessionData } = useSession();
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      {sessionData && (
-        <>
-          <span className="text-2xl font-bold text-red-400">
-            Logged in as {sessionData.user?.name}
-          </span>
-          <Image
-            className="rounded-full"
-            src={sessionData.user?.image || ""}
-            alt="profile Image"
-            width={100}
-            height={100}
-            quality={100}
-          />
-        </>
-      )}
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
+function RecentTweets() {
+  const tweets = api.tweet.infiniteFeed.useInfiniteQuery(
+    {},
+    {getNextPageParam: (lastPage)=> lastPage.nextCursor}
   );
-};
+  
+  return (
+    <InfiniteTweetList
+      tweets={tweets.data?.pages.flatMap((page)=> page.tweets)}
+      isError={tweets.isError}
+      isLoading={tweets.isLoading}
+      hasMore={tweets.hasNextPage}
+      fetchNewTweets={tweets.fetchNextPage}
+    />
+  );
+}
+
+export default Home;

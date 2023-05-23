@@ -7,17 +7,41 @@ import Link from 'next/link';
 import IconHoverEffects from '~/components/IconHoverEffects';
 import { VscArrowLeft } from 'react-icons/vsc';
 import ProfileImage from '~/components/ProfileImage';
+import InfiniteTweetList from '~/components/InfiniteTweetList';
+import { useSession } from 'next-auth/react';
+import Button from '~/components/Button';
 
 type ProfilePageProps = {
   id: string;
 }
 
-const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps  >> = ({ id } : ProfilePageProps) => {
+const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ id } : ProfilePageProps) => {
   const {data: profile } = api.profile.getById.useQuery({ id });
 
   if(profile == null || profile.name == null){
     return <ErrorPage statusCode={404}/>;
   }
+
+  const trpcUtils = api.useContext();
+  const toggleFollow = api.profile.toggleFollow.useMutation({
+    onSuccess: ({addedFollow})=>{
+
+      trpcUtils.profile.getById.setData({ id }, (oldData)=> {
+        if(oldData == null) return;
+        const countModifier = addedFollow ? 1 : -1;
+
+        return {
+          ...oldData,
+          followersCount: oldData.followersCount + countModifier,
+          isFollowing: addedFollow,
+        };
+      });
+    }
+  });
+
+  const handleFollowButton = ()=> {
+    toggleFollow.mutate({userId: id});
+  };
 
   return <>
     <Head>
@@ -38,29 +62,61 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps  >> = 
         <div className="text-gray-500">
           {profile.tweetsCount} {' '}
           {getPlural(profile.tweetsCount, 'Tweet', 'Tweets')} -{' '}
-          {profile.follwersCount} {' '}
-          {getPlural(profile.follwersCount, 'Followers', 'Followers')} -{' '}
+          {profile.followersCount} {' '}
+          {getPlural(profile.followersCount, 'Followers', 'Followers')} -{' '}
           {profile.followsCount} Following
         </div>
-        <FollowButton isFollowing={profile.isFollowing} userId={id} onClick={()=> null}/>
       </div>
+      <FollowButton 
+        isFollowing={profile.isFollowing} 
+        isLoading={toggleFollow.isLoading}
+        userId={id} 
+        onClick={handleFollowButton}
+      />
     </header>
     <main>
-        Hello 
+      <ProfileTweets userId={id}/>
     </main>
   </>;
 };
 
 type FollowButtonProps = {
   isFollowing: boolean;
+  isLoading: boolean;
   userId: string;
   onClick: () => void;
 }
 
-function FollowButton({isFollowing, userId, onClick}: FollowButtonProps){
-  return <button onClick={onClick}>
-    {isFollowing ? 'Unfollow' : 'Follow'}
-  </button>;
+function FollowButton({isFollowing, isLoading, userId, onClick}: FollowButtonProps){
+  const session = useSession();
+  if(session.status != 'authenticated' || session.data.user.id === userId) return null;
+
+  return (
+    <Button onClick={onClick} small gray={isFollowing} disabled={isLoading}>
+      {isFollowing ? 'Unfollow' : 'Follow'}
+    </Button>
+  );
+}
+
+type ProfileTweetsProps = {
+  userId: string;
+}
+
+function ProfileTweets({userId}: ProfileTweetsProps){
+  const tweets = api.tweet.infiniteProfileFeed.useInfiniteQuery(
+    {userId},
+    {getNextPageParam: (lastPage) => lastPage.nextCursor}
+  );
+
+  return (
+    <InfiniteTweetList
+      tweets={tweets.data?.pages.flatMap((page)=> page.tweets)}
+      isError={tweets.isError}
+      isLoading={tweets.isLoading}
+      hasMore={tweets.hasNextPage}
+      fetchNewTweets={tweets.fetchNextPage}
+    />
+  );
 }
 
 const pluralRules = new Intl.PluralRules();

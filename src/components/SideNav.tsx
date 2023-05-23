@@ -23,7 +23,7 @@ export default function SideNav() {
               width={70}
               height={70}
               priority={true}
-            />
+            /> 
           </Link>
         </li>
         <li>
@@ -58,7 +58,7 @@ export default function SideNav() {
           >
             <IconHoverEffects>
               <span className="flex items-center gap-4">
-                {user != null ? 
+                {user != null ?
                   <>
                     <VscSignOut className="w-8 h-8 fill-red-700"/>
                     <span className="hidden text-lg text-red-700 md:inline">

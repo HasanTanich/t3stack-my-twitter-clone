@@ -5,6 +5,7 @@ import { VscHeart, VscHeartFilled } from 'react-icons/vsc';
 import { useSession } from 'next-auth/react';
 import IconHoverEffects from './IconHoverEffects';
 import { api } from '~/utils/api';
+import { LoadingSpinner } from './LoadingSpinner';
 
 type Tweet = {
   id: string;
@@ -30,7 +31,7 @@ type InfiniteTweetListProps = {
 export default function InfiniteTweetList(
   {tweets, isError, isLoading, hasMore = false, fetchNewTweets }: InfiniteTweetListProps
 ) {
-  if(isLoading) return <h1>loading...</h1>;
+  if(isLoading) return <LoadingSpinner />;
   if(isError)return <h1>Log in to see tweets</h1>;
 
   if(tweets == null || tweets.length === 0){
@@ -43,7 +44,7 @@ export default function InfiniteTweetList(
         dataLength={tweets.length}
         next={fetchNewTweets}
         hasMore={hasMore}
-        loader={'Loading...'}
+        loader={<LoadingSpinner />}
       >
         {tweets.map(tweet=> (
           <TweetCard key={tweet.id} {...tweet}/>
@@ -64,7 +65,6 @@ function TweetCard({id, user, content, createdAt, likeCount, likedByMe}: Tweet){
     onSuccess: ({ addedLike })=> {
       const updateData : Parameters<typeof trpcUtils.tweet.infiniteFeed.setInfiniteData>[1] = (oldData) => {
         if(oldData == null) return;
-
         const countModifier = addedLike ? 1 : -1;
 
         return {
@@ -87,8 +87,10 @@ function TweetCard({id, user, content, createdAt, likeCount, likedByMe}: Tweet){
           })
         };
       };
-
-      trpcUtils.tweet.infiniteFeed.setInfiniteData({}, updateData);
+      // invalidate data
+      trpcUtils.tweet.infiniteFeed.setInfiniteData({}, updateData); // Recent tweets feed
+      trpcUtils.tweet.infiniteFeed.setInfiniteData({onlyFollowing: true}, updateData); // Only follwing feed
+      trpcUtils.tweet.infiniteProfileFeed.setInfiniteData({userId: user.id}, updateData); // User profile feed
     }
   });
 

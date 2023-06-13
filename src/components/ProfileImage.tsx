@@ -17,7 +17,6 @@ export default function ProfileImage({src, className=''}: ProfileImageProps) {
           alt="profile Image"
           fill
           quality={100}
-          priority={true}
         />
       }
     </div>

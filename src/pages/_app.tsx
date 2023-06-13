@@ -1,22 +1,25 @@
-import { type AppType } from 'next/app';
-import { type Session } from 'next-auth';
-import { type NextComponentType } from 'next';
-import { SessionProvider } from 'next-auth/react';
+import { type AppType } from "next/app";
+import { type Session } from "next-auth";
+import { type NextComponentType } from "next";
+import { SessionProvider } from "next-auth/react";
 
-import { api } from '~/utils/api';
+import { api } from "~/utils/api";
 
-import '~/styles/globals.css';
-import Head from 'next/head';
-import SideNav from '~/components/SideNav';
+import "~/styles/globals.css";
+import Head from "next/head";
+import SideNav from "~/components/SideNav";
 
 type MyAppProps = {
-  Component: NextComponentType,
+  Component: NextComponentType;
   pageProps: {
-    session: Session | null
-  }
-}
+    session: Session | null;
+  };
+};
 
-const MyApp: AppType<{ session: Session | null }> = ({Component, pageProps: { session, ...pageProps }} : MyAppProps) => {
+const MyApp: AppType<{ session: Session | null }> = ({
+  Component,
+  pageProps: { session, ...pageProps },
+}: MyAppProps) => {
   return (
     <SessionProvider session={session}>
       <Head>
@@ -27,9 +30,9 @@ const MyApp: AppType<{ session: Session | null }> = ({Component, pageProps: { se
         />
         <link rel="icon" href="/logo.ico" />
       </Head>
-      <div className="container flex items-start mx-auto sm:pr-4">
+      <div className="container mx-auto flex items-start sm:pr-4">
         <SideNav />
-        <div className="flex-grow min-h-screen border-x">
+        <div className="min-h-screen flex-grow border-x">
           <Component {...pageProps} />
         </div>
       </div>

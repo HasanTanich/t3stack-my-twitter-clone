@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.z-100 {
+  z-index: 100;
+}
+
+.z-1000 {
+  z-index: 1000;
+}
+
+.bg-half-transparent {
+  background-color: rgb(0, 0, 0, 0.7);
+}
